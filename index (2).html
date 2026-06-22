@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoring Pendataan SE2026 — Kab. Banjarmasin</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz@8..60&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink:#1c2630;
+    --paper:#ffb347;
+    --paper-raised:#ffffff;
+    --rule:#d8d2c4;
+    --accent:#b4452f;
+    --accent-soft:#f0ddd4;
+    --good:#3f6b4f;
+    --good-soft:#e1ebe2;
+    --warn:#a87b1f;
+    --warn-soft:#f3e8d2;
+    --muted:#6b6358;
+    --mono: 'IBM Plex Mono', monospace;
+    --serif: 'Source Serif 4', serif;
+    --sans: 'Inter', sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--sans);}
+
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
+
+  header.page{
+    border-bottom:3px double var(--ink);
+    padding-bottom:18px;
+    margin-bottom:22px;
+  }
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 8px;
+  }
+  h1{
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:clamp(28px,4.5vw,42px);
+    line-height:1.08;
+    margin:0 0 8px;
+    letter-spacing:-.01em;
+  }
+  .sub{font-size:15px;color:var(--muted);margin:0;line-height:1.5;}
+
+  /* ---- status bar ---- */
+  .status-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:18px;
+  }
+  .status-dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--rule);
+    flex-shrink:0;
+  }
+  .status-dot.ok{background:var(--good);}
+  .status-dot.err{background:var(--accent);}
+  .status-dot.loading{background:var(--warn);animation:pulse 1s infinite ease-in-out;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  #refreshBtn{
+    margin-left:auto;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+    background:transparent;
+    border:1.5px solid var(--rule);
+    border-radius:3px;
+    padding:5px 12px;
+    cursor:pointer;
+  }
+  #refreshBtn:hover{border-color:var(--ink);color:var(--ink);}
+
+  /* ---- search box ---- */
+  .lookup{
+    background:var(--paper-raised);
+    border:1.5px solid var(--rule);
+    border-radius:4px;
+    padding:22px 24px;
+    margin-bottom:22px;
+    box-shadow:0 2px 0 rgba(0,0,0,.03);
+  }
+  .lookup-label{
+    font-family:var(--mono);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:var(--muted);
+    margin:0 0 12px;
+    display:block;
+  }
+  .lookup-row{display:flex;gap:10px;}
+  #nipInput{
+    flex:1;
+    font-family:var(--mono);
+    font-size:18px;
+    letter-spacing:.03em;
+    padding:12px 16px;
+    border:2px solid var(--ink);
+    border-radius:3px;
+    background:#fff;
+    color:var(--ink);
+  }
+  #nipInput:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);}
+  #nipInput::placeholder{color:#a8a194;font-style:italic;font-size:16px;}
+  #clearBtn{
+    font-family:var(--sans);
+    font-size:14px;
+    font-weight:600;
+    color:var(--muted);
+    background:transparent;
+    border:2px solid var(--rule);
+    border-radius:3px;
+    padding:0 20px;
+    cursor:pointer;
+  }
+  #clearBtn:hover{border-color:var(--ink);color:var(--ink);}
+  .hint{font-size:13px;color:var(--muted);margin:12px 0 0;line-height:1.5;}
+  .hint b{color:var(--ink);font-family:var(--mono);font-weight:600;}
+
+  /* ---- filter bar ---- */
+  .filter-bar{
+    background:var(--paper-raised);
+    border:1.5px solid var(--rule);
+    border-radius:4px;
+    padding:18px 24px;
+    margin-bottom:22px;
+    box-shadow:0 2px 0 rgba(0,0,0,.03);
+  }
+  .filter-label{
+    font-family:var(--mono);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:var(--muted);
+    margin:0 0 14px;
+    display:block;
+  }
+  .filter-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:12px;
+  }
+  .filter-group{display:flex;flex-direction:column;gap:6px;}
+  .filter-group label{
+    font-family:var(--mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--muted);
+    font-weight:600;
+  }
+  .filter-group select{
+    font-family:var(--sans);
+    font-size:14px;
+    padding:10px 12px;
+    border:2px solid var(--rule);
+    border-radius:3px;
+    background:#fff;
+    color:var(--ink);
+    cursor:pointer;
+    width:100%;
+  }
+  .filter-group select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+  .filter-group select option{font-size:14px;}
+
+  /* ---- empty / not found / error ---- */
+  .empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+  .empty-state .glyph{font-family:var(--mono);font-size:32px;color:var(--rule);margin-bottom:14px;display:block;}
+  .empty-state p{margin:6px 0;font-size:15px;line-height:1.6;}
+
+  .not-found, .load-error{
+    background:var(--warn-soft);
+    border:1.5px solid var(--warn);
+    color:#5c4413;
+    padding:16px 20px;
+    border-radius:4px;
+    font-size:14px;
+    font-family:var(--mono);
+    line-height:1.6;
+  }
+  .load-error{background:var(--accent-soft);border-color:var(--accent);color:#7a2e1c;}
+
+  /* ---- Kecamatan Overview ---- */
+  .kec-overview{
+    background:var(--paper-raised);
+    border:1.5px solid var(--rule);
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:22px;
+  }
+  .kec-overview-header{
+    background:var(--ink);
+    color:#fff;
+    padding:20px 24px;
+  }
+  .kec-overview-title{
+    font-family:var(--serif);
+    font-size:26px;
+    font-weight:700;
+    margin:0;
+  }
+  .kec-overview-sub{
+    font-family:var(--mono);
+    font-size:12px;
+    color:#cfc6b4;
+    letter-spacing:.06em;
+    margin:6px 0 0;
+  }
+  .kec-overview-stats{
+    display:flex;
+    gap:24px;
+    margin-top:16px;
+    padding-top:16px;
+    border-top:1px solid rgba(255,255,255,.18);
+    flex-wrap:wrap;
+  }
+
+  /* ---- Dropdown Section ---- */
+  .dropdown-section{
+    background:var(--paper-raised);
+    border:1.5px solid var(--rule);
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:16px;
+  }
+  .dropdown-header{
+    background:var(--ink);
+    color:#fff;
+    padding:16px 24px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+    user-select:none;
+    gap:12px;
+  }
+  .dropdown-header:hover{background:#2a3a4a;}
+  .dropdown-title{
+    font-family:var(--serif);
+    font-size:20px;
+    font-weight:700;
+    margin:0;
+  }
+  .dropdown-count{
+    font-family:var(--mono);
+    font-size:12px;
+    color:#cfc6b4;
+    letter-spacing:.06em;
+    margin:4px 0 0;
+  }
+  .dropdown-chevron{
+    font-family:var(--mono);
+    font-size:14px;
+    color:#cfc6b4;
+    background:rgba(255,255,255,.1);
+    border:1.5px solid rgba(255,255,255,.2);
+    border-radius:50%;
+    width:28px;
+    height:28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    transition:transform .2s ease;
+  }
+  .dropdown-section.open .dropdown-chevron{transform:rotate(180deg);}
+  .dropdown-body{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .28s ease;
+  }
+  .dropdown-section.open .dropdown-body{max-height:5000px;}
+  .dropdown-inner{padding:0;}
+
+  /* ---- Task Force Item ---- */
+  .tf-item{
+    border-bottom:1.5px solid var(--rule);
+  }
+  .tf-item:last-child{border-bottom:none;}
+  .tf-header-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    padding:16px 24px;
+    background:#f8f6f1;
+    cursor:pointer;
+    user-select:none;
+    transition:background .15s ease;
+  }
+  .tf-header-row:hover{background:#f0ece4;}
+  .tf-item.open .tf-header-row{background:var(--good-soft);}
+  .tf-name{
+    font-family:var(--serif);
+    font-size:18px;
+    font-weight:700;
+    margin:0;
+  }
+  .tf-nip{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+    margin:3px 0 0;
+  }
+  .tf-mini-stats{display:flex;gap:20px;flex-shrink:0;}
+  .tf-chevron{
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--muted);
+    background:var(--paper);
+    border:1.5px solid var(--rule);
+    border-radius:50%;
+    width:28px;
+    height:28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    transition:transform .2s ease;
+  }
+  .tf-item.open .tf-chevron{transform:rotate(180deg);}
+  .tf-body{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .28s ease;
+  }
+  .tf-item.open .tf-body{max-height:5000px;}
+  .tf-inner{padding:0 24px 18px;}
+
+  /* ---- PML Card ---- */
+  .pml-card{border-bottom:1.5px solid var(--rule);cursor:pointer;user-select:none;}
+  .pml-card:last-child{border-bottom:none;}
+  .pml-card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    padding:14px 0;
+    transition:background .15s ease;
+  }
+  .pml-card-top:hover{background:#fbfaf6;}
+  .pml-card.open .pml-card-top{background:var(--good-soft);}
+
+  .pml-name-block .pml-name{font-family:var(--serif);font-size:17px;font-weight:700;margin:0;}
+  .pml-name-block .pml-meta{font-size:12px;color:var(--muted);margin-top:3px;}
+  .pml-name-block .pml-meta span{margin-right:14px;}
+  .pml-name-block .pml-meta b{color:var(--ink);font-weight:600;}
+
+  .pml-mini-stats{display:flex;gap:20px;flex-shrink:0;}
+  .mini-stat{font-family:var(--mono);text-align:right;}
+  .mini-stat .num{font-size:16px;font-weight:600;color:var(--ink);display:block;}
+  .mini-stat .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+
+  .chevron{
+    font-family:var(--mono);font-size:14px;color:var(--muted);
+    background:var(--paper);border:1.5px solid var(--rule);border-radius:50%;
+    width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;transition:transform .2s ease;
+  }
+  .pml-card.open .chevron{transform:rotate(180deg);}
+
+  .detail-wrap{max-height:0;overflow:hidden;transition:max-height .28s ease;}
+  .detail-wrap.open{max-height:3000px;}
+  .detail-inner{padding:0 0 16px;}
+
+  table.ppl-table{width:100%;border-collapse:collapse;font-size:13px;}
+  table.ppl-table caption{text-align:left;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:12px 0 10px;}
+  table.ppl-table thead th{text-align:left;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:2px solid var(--ink);padding:8px 10px;white-space:nowrap;}
+  table.ppl-table thead th.num{text-align:right;}
+  table.ppl-table tbody td{padding:9px 10px;border-bottom:1.5px solid var(--rule);}
+  table.ppl-table tbody td.num{text-align:right;font-family:var(--mono);font-size:12px;}
+  table.ppl-table tbody tr:hover{background:#fbfaf6;}
+
+  .pct-bar-cell{display:flex;align-items:center;gap:8px;justify-content:flex-end;}
+  .pct-track{width:50px;height:6px;background:var(--rule);border-radius:3px;overflow:hidden;flex-shrink:0;}
+  .pct-fill{height:100%;background:var(--good);}
+  .pct-fill.low{background:var(--warn);}
+
+  /* ---- Stat universal ---- */
+  .stat{font-family:var(--mono);}
+  .stat .num{font-size:22px;font-weight:600;color:var(--ink);display:block;}
+  .stat .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+
+  footer.page{margin-top:40px;padding-top:16px;border-top:1.5px solid var(--rule);font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.03em;line-height:1.6;}
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width:768px){
+    .filter-grid{grid-template-columns:repeat(2, 1fr);}
+  }
+  @media (max-width:600px){
+    .wrap{padding:20px 14px 60px;}
+    .lookup{padding:18px 16px;}
+    .filter-bar{padding:16px 16px;}
+    .dropdown-header{padding:14px 16px;}
+    .dropdown-title{font-size:17px;}
+    .tf-header-row{padding:14px 16px;flex-direction:column;align-items:flex-start;gap:10px;}
+    .tf-name{font-size:16px;}
+    .tf-mini-stats{gap:14px;}
+    .pml-card-top{flex-direction:column;align-items:flex-start;gap:10px;}
+    .pml-mini-stats{gap:14px;}
+    .kec-overview-stats{gap:14px;}
+    .kec-overview-header{padding:16px 16px;}
+    .kec-overview-title{font-size:20px;}
+    table.ppl-table{font-size:11px;}
+    .lookup-row{flex-direction:column;}
+    .filter-grid{grid-template-columns:1fr;}
+    .dropdown-header{flex-direction:column;align-items:flex-start;gap:8px;}
+    .stat .num{font-size:18px;}
+    .tf-inner{padding:0 16px 14px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <p class="eyebrow">Sensus Ekonomi 2026 · Kab/Kota 6371</p>
+    <h1>Monitoring Progress Pendataan</h1>
+    <p class="sub">Masukkan NIP Task Force untuk menampilkan seluruh PML dan PPL di bawahnya. Ketik <b>9999</b> untuk melihat ringkasan seluruh kecamatan.</p>
+  </header>
+
+  <div class="status-bar">
+    <span class="status-dot loading" id="statusDot"></span>
+    <span id="statusText">Memuat data terbaru…</span>
+    <button id="refreshBtn" type="button">↻ Refresh data</button>
+  </div>
+
+  <div class="lookup">
+    <label class="lookup-label" for="nipInput">Cari berdasarkan NIP Task Force</label>
+    <div class="lookup-row">
+      <input id="nipInput" type="text" inputmode="numeric" placeholder="Ketik atau tempel NIP, contoh: 340062842" autocomplete="off" disabled>
+      <button id="clearBtn" type="button">Bersihkan</button>
+    </div>
+    <p class="hint" id="hintText">Memuat daftar Task Force…</p>
+  </div>
+
+  <div id="filterArea" style="display:none;">
+    <div class="filter-bar">
+      <label class="filter-label">Filter Data</label>
+      <div class="filter-grid">
+        <div class="filter-group">
+          <label for="filterKec">Kecamatan</label>
+          <select id="filterKec"><option value="">Semua Kecamatan</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="filterTF">Task Force</label>
+          <select id="filterTF"><option value="">Semua Task Force</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="filterPML">PML</label>
+          <select id="filterPML"><option value="">Semua PML</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="filterPPL">PPL</label>
+          <select id="filterPPL"><option value="">Semua PPL</option></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultArea"></div>
+
+  <footer class="page">
+    DATA SUMBER: PROGRESS PPL · SE2026 — DIAMBIL LANGSUNG DARI GOOGLE SHEETS SAAT HALAMAN DIBUKA
+  </footer>
+</div>
+
+<script>
+// ====== KONFIGURASI ======
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXpVwhWEVGDNmGefdCjapaDYWD_b7V_KOdhpdIE2ZB2SzAmxD4u2oplc5rSzOyTGLm-0F-9XBxm8ja/pub?gid=2111234947&single=true&output=csv";
+
+const NIP_MAP = {"340019495":"M.TAUFIK R","132311851":"IMA","340015186":"NURUDDIN ZAIN","340015557":"SYAKERANI","340050198":"PRATIWI","340055352":"NOORHAMIMAH","340056117":"FARIDA AMINA","340016618":"DWI SETYO MAYLENA","340056874":"RAISA NOOR MAULIDA","340018139":"JUNAIDI EFENDI","340018823":"M.IQBAL","340055342":"DANY THERESA","340057558":"RISKA FINA AYUNINDA","340058750":"GHITA","340060168":"KHALISTA","340061619":"ADIMA LULUATUN","340063514":"SALMA AFNA H. H","340066120":"ANNISA","340066397":"NASYWA","340012390":"AL AMIN","340065201":"IMRON","340052140":"IRWAN","340065025":"SAFWAN","340016619":"JULIANA ADMAKA","340019091":"LISDA FITRIAWATI","340062842":"HENDRA"};
+
+const TF_TO_NIP = {};
+Object.entries(NIP_MAP).forEach(([nip, name]) => { TF_TO_NIP[name] = nip; });
+
+const MASTER_NIP = "9999";
+const STORAGE_KEY = 'se2026_nip_terakhir';
+
+let DATA = [];
+let FILTER_STATE = { kec: '', tf: '', pml: '', ppl: '' };
+
+const elInput = document.getElementById('nipInput');
+const elResult = document.getElementById('resultArea');
+const elClear = document.getElementById('clearBtn');
+const elHint = document.getElementById('hintText');
+const elStatusDot = document.getElementById('statusDot');
+const elStatusText = document.getElementById('statusText');
+const elRefreshBtn = document.getElementById('refreshBtn');
+const elFilterArea = document.getElementById('filterArea');
+const elFilterKec = document.getElementById('filterKec');
+const elFilterTF = document.getElementById('filterTF');
+const elFilterPML = document.getElementById('filterPML');
+const elFilterPPL = document.getElementById('filterPPL');
+
+function fmt(n){ if(n===null||n===undefined||isNaN(n)) return '–'; return Number(n).toLocaleString('id-ID',{maximumFractionDigits:0}); }
+function fmtDec(n){ if(n===null||n===undefined||isNaN(n)) return '–'; return Number(n).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtPct(n){ if(n===null||n===undefined||isNaN(n)) return '–'; return Number(n).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'; }
+function escapeHtml(str){ if(str===null||str===undefined) return ''; return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toNum(s){
+  if (s===undefined||s===null) return null;
+  s = String(s).trim();
+  if (s === '') return null;
+  if (/^\d{1,3}(\.\d{3})+$/.test(s)) {
+    s = s.replace(/\./g, '');
+  } else if (/^\d{1,3}(\.\d{3})+,\d+$/.test(s)) {
+    s = s.replace(/\./g, '').replace(/,/g, '.');
+  } else if (s.includes(',') && !s.includes('.')) {
+    s = s.replace(/,/g, '.');
+  }
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i=0; i<text.length; i++){
+    const ch = text[i];
+    if (inQuotes){
+      if (ch === '"'){
+        if (text[i+1] === '"'){ field += '"'; i++; }
+        else { inQuotes = false; }
+      } else { field += ch; }
+    } else {
+      if (ch === '"'){ inQuotes = true; }
+      else if (ch === ','){ row.push(field); field=''; }
+      else if (ch === '\r'){ /* skip */ }
+      else if (ch === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else { field += ch; }
+    }
+  }
+  if (field.length || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+function setStatus(state, text){
+  elStatusDot.className = 'status-dot ' + state;
+  elStatusText.textContent = text;
+}
+
+async function loadData(){
+  setStatus('loading', 'Memuat data terbaru…');
+  elInput.disabled = true;
+  try{
+    const res = await fetch(CSV_URL + '&_=' + Date.now(), {cache:'no-store'});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const grid = parseCSV(text);
+
+    let headerRowIdx = grid.findIndex(r => (r[0]||'').trim() === 'Kecamatan');
+    if (headerRowIdx === -1) headerRowIdx = 1;
+
+    const rows = [];
+    for (let r = headerRowIdx+1; r < grid.length; r++){
+      const cols = grid[r];
+      if (!cols || cols.length < 5) continue;
+      const kec = (cols[0]||'').trim();
+      const tf = (cols[1]||'').trim();
+      const pml = (cols[2]||'').trim();
+      const ppl = (cols[4]||'').trim();
+      if (!pml || !ppl) continue;
+      if (/total/i.test(pml)) continue;
+      rows.push({
+        kec, tf, pml, ppl,
+        target: toNum(cols[5]),
+        kirim: toNum(cols[6]),
+        draft: toNum(cols[7]),
+        rata: toNum(cols[8]),
+        persen: toNum(cols[9]),
+      });
+    }
+
+    if (rows.length === 0) throw new Error('Data kosong setelah parsing — format CSV mungkin berubah');
+
+    DATA = rows;
+    setStatus('ok', 'Data termuat · ' + rows.length.toLocaleString('id-ID') + ' baris PPL');
+    elInput.disabled = false;
+    elHint.innerHTML = 'Total <b>' + Object.keys(NIP_MAP).length.toLocaleString('id-ID') + '</b> Task Force terdaftar dengan NIP. Ketik <b>9999</b> untuk melihat ringkasan seluruh kecamatan dengan filter.';
+
+    // Populate filter options
+    populateAllFilters();
+
+    // DO NOT auto-fill saved NIP - user must input manually
+    renderEmpty();
+
+  }catch(err){
+    setStatus('err', 'Gagal memuat data');
+    elResult.innerHTML = '<div class="load-error">Gagal mengambil data dari Google Sheets.<br>Penyebab: ' + escapeHtml(err.message) + '<br><br>Coba klik "↻ Refresh data" di atas, atau periksa apakah link publish CSV masih aktif.</div>';
+  }
+}
+
+// ====== POPULATE ALL FILTERS (full data) ======
+function populateAllFilters(){
+  const kecSet = new Set(DATA.map(r => r.kec).filter(Boolean));
+  const tfSet = new Set(DATA.map(r => r.tf).filter(Boolean));
+  const pmlSet = new Set(DATA.map(r => r.pml).filter(Boolean));
+  const pplSet = new Set(DATA.map(r => r.ppl).filter(Boolean));
+
+  fillSelect(elFilterKec, Array.from(kecSet).sort(), 'Semua Kecamatan');
+  fillSelect(elFilterTF, Array.from(tfSet).sort(), 'Semua Task Force');
+  fillSelect(elFilterPML, Array.from(pmlSet).sort(), 'Semua PML');
+  fillSelect(elFilterPPL, Array.from(pplSet).sort(), 'Semua PPL');
+}
+
+function fillSelect(selectEl, items, defaultLabel){
+  selectEl.innerHTML = '<option value="">' + defaultLabel + '</option>';
+  items.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item;
+    opt.textContent = item;
+    selectEl.appendChild(opt);
+  });
+}
+
+// ====== CASCADING FILTER LOGIC ======
+// Saat filter di atas berubah, SEMUA filter di bawahnya direset ke "Semua"
+// dan dropdown diisi ulang hanya dengan data yang tersedia (unavailable dihapus)
+
+function onFilterKecChange(){
+  const selectedKec = elFilterKec.value;
+
+  // Reset semua filter di bawahnya ke "Semua"
+  FILTER_STATE = { kec: selectedKec, tf: '', pml: '', ppl: '' };
+  elFilterTF.value = '';
+  elFilterPML.value = '';
+  elFilterPPL.value = '';
+
+  // Update TF dropdown: hanya TF yang ada di kecamatan yang dipilih
+  let filteredForTF = DATA;
+  if (selectedKec) filteredForTF = filteredForTF.filter(r => r.kec === selectedKec);
+  const tfItems = Array.from(new Set(filteredForTF.map(r => r.tf).filter(Boolean))).sort();
+  fillSelect(elFilterTF, tfItems, 'Semua Task Force');
+
+  // Update PML dropdown: hanya PML yang ada di kecamatan yang dipilih
+  let filteredForPML = DATA;
+  if (selectedKec) filteredForPML = filteredForPML.filter(r => r.kec === selectedKec);
+  const pmlItems = Array.from(new Set(filteredForPML.map(r => r.pml).filter(Boolean))).sort();
+  fillSelect(elFilterPML, pmlItems, 'Semua PML');
+
+  // Update PPL dropdown: hanya PPL yang ada di kecamatan yang dipilih
+  let filteredForPPL = DATA;
+  if (selectedKec) filteredForPPL = filteredForPPL.filter(r => r.kec === selectedKec);
+  const pplItems = Array.from(new Set(filteredForPPL.map(r => r.ppl).filter(Boolean))).sort();
+  fillSelect(elFilterPPL, pplItems, 'Semua PPL');
+
+  renderAllKecamatan();
+}
+
+function onFilterTFChange(){
+  const selectedKec = elFilterKec.value;
+  const selectedTF = elFilterTF.value;
+
+  // Reset PML dan PPL ke "Semua"
+  FILTER_STATE = { kec: selectedKec, tf: selectedTF, pml: '', ppl: '' };
+  elFilterPML.value = '';
+  elFilterPPL.value = '';
+
+  // Update PML dropdown: hanya PML yang ada di kecamatan + TF yang dipilih
+  let filteredForPML = DATA;
+  if (selectedKec) filteredForPML = filteredForPML.filter(r => r.kec === selectedKec);
+  if (selectedTF) filteredForPML = filteredForPML.filter(r => r.tf === selectedTF);
+  const pmlItems = Array.from(new Set(filteredForPML.map(r => r.pml).filter(Boolean))).sort();
+  fillSelect(elFilterPML, pmlItems, 'Semua PML');
+
+  // Update PPL dropdown: hanya PPL yang ada di kecamatan + TF yang dipilih
+  let filteredForPPL = DATA;
+  if (selectedKec) filteredForPPL = filteredForPPL.filter(r => r.kec === selectedKec);
+  if (selectedTF) filteredForPPL = filteredForPPL.filter(r => r.tf === selectedTF);
+  const pplItems = Array.from(new Set(filteredForPPL.map(r => r.ppl).filter(Boolean))).sort();
+  fillSelect(elFilterPPL, pplItems, 'Semua PPL');
+
+  renderAllKecamatan();
+}
+
+function onFilterPMLChange(){
+  const selectedKec = elFilterKec.value;
+  const selectedTF = elFilterTF.value;
+  const selectedPML = elFilterPML.value;
+
+  // Reset PPL ke "Semua"
+  FILTER_STATE = { kec: selectedKec, tf: selectedTF, pml: selectedPML, ppl: '' };
+  elFilterPPL.value = '';
+
+  // Update PPL dropdown: hanya PPL yang ada di kecamatan + TF + PML yang dipilih
+  let filteredForPPL = DATA;
+  if (selectedKec) filteredForPPL = filteredForPPL.filter(r => r.kec === selectedKec);
+  if (selectedTF) filteredForPPL = filteredForPPL.filter(r => r.tf === selectedTF);
+  if (selectedPML) filteredForPPL = filteredForPPL.filter(r => r.pml === selectedPML);
+  const pplItems = Array.from(new Set(filteredForPPL.map(r => r.ppl).filter(Boolean))).sort();
+  fillSelect(elFilterPPL, pplItems, 'Semua PPL');
+
+  renderAllKecamatan();
+}
+
+function onFilterPPLChange(){
+  FILTER_STATE.ppl = elFilterPPL.value;
+  renderAllKecamatan();
+}
+
+elFilterKec.addEventListener('change', onFilterKecChange);
+elFilterTF.addEventListener('change', onFilterTFChange);
+elFilterPML.addEventListener('change', onFilterPMLChange);
+elFilterPPL.addEventListener('change', onFilterPPLChange);
+
+// ====== RENDER FUNCTIONS ======
+function renderEmpty(){
+  elFilterArea.style.display = 'none';
+  elResult.innerHTML = `
+    <div class="empty-state">
+      <span class="glyph">[ ? ]</span>
+      <p>Belum ada NIP yang dicari.</p>
+      <p>Masukkan NIP Task Force di kotak atas untuk menampilkan tim PML dan PPL terkait.</p>
+      <p style="margin-top:14px;font-size:14px;">Ketik <b>9999</b> untuk melihat ringkasan seluruh kecamatan dengan filter.</p>
+    </div>`;
+}
+
+function renderNotFound(nip){
+  elFilterArea.style.display = 'none';
+  elResult.innerHTML = `<div class="not-found">NIP "${escapeHtml(nip)}" tidak ditemukan pada daftar NIP Task Force.</div>`;
+}
+
+function buildPmlCard(pmlName, pplRows, idx) {
+  const pmlTarget = pplRows.reduce((s,r)=> s + (r.target||0), 0);
+  const pmlKirim = pplRows.reduce((s,r)=> s + (r.kirim||0), 0);
+  const pmlPersen = pmlTarget > 0 ? (pmlKirim/pmlTarget*100) : 0;
+
+  const rowsHtml = pplRows.map(r => {
+    const pct = r.persen || 0;
+    const pctClass = pct < 2 ? 'low' : '';
+    return `
+      <tr>
+        <td>${escapeHtml(r.ppl)}</td>
+        <td class="num">${fmt(r.target)}</td>
+        <td class="num">${fmt(r.kirim)}</td>
+        <td class="num">${fmt(r.draft)}</td>
+        <td class="num">${fmtDec(r.rata)}</td>
+        <td class="num">
+          <div class="pct-bar-cell">
+            <span>${fmtPct(pct)}</span>
+            <span class="pct-track"><span class="pct-fill ${pctClass}" style="width:${Math.min(pct,100)}%"></span></span>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  return `
+    <div class="pml-card" data-idx="${idx}">
+      <div class="pml-card-top">
+        <div class="pml-name-block">
+          <p class="pml-name">${escapeHtml(pmlName)}</p>
+          <div class="pml-meta">
+            <span><b>${pplRows.length}</b> PPL</span>
+            <span>Progress: <b>${fmtPct(pmlPersen)}</b></span>
+          </div>
+        </div>
+        <div class="pml-mini-stats">
+          <div class="mini-stat"><span class="num">${fmt(pmlTarget)}</span><span class="lbl">Target</span></div>
+          <div class="mini-stat"><span class="num">${fmt(pmlKirim)}</span><span class="lbl">Dikirim</span></div>
+        </div>
+        <div class="chevron">▾</div>
+      </div>
+      <div class="detail-wrap">
+        <div class="detail-inner">
+          <table class="ppl-table">
+            <caption>Seluruh PPL di bawah ${escapeHtml(pmlName)}</caption>
+            <thead>
+              <tr>
+                <th>PPL</th><th class="num">Target</th><th class="num">Dikirim</th>
+                <th class="num">Draft</th><th class="num">Rata²/Hari</th><th class="num">Persentase</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderSingleTF(nip, tfName){
+  elFilterArea.style.display = 'none';
+  const tfNameNorm = tfName.trim();
+  const teamRows = DATA.filter(r => r.tf.trim().toUpperCase() === tfNameNorm.toUpperCase());
+
+  if (teamRows.length === 0){
+    elResult.innerHTML = `<div class="not-found">Task Force "${escapeHtml(tfName)}" ditemukan, namun tidak ada data PML/PPL yang cocok pada data saat ini.</div>`;
+    return;
+  }
+
+  const kec = teamRows[0].kec;
+  const totalTarget = teamRows.reduce((s,r)=> s + (r.target||0), 0);
+  const totalKirim = teamRows.reduce((s,r)=> s + (r.kirim||0), 0);
+  const totalDraft = teamRows.reduce((s,r)=> s + (r.draft||0), 0);
+  const avgPersen = totalTarget > 0 ? (totalKirim/totalTarget*100) : 0;
+
+  const pmlGroups = {};
+  teamRows.forEach(r => { (pmlGroups[r.pml] = pmlGroups[r.pml] || []).push(r); });
+
+  const pmlCardsHtml = Object.entries(pmlGroups).map(([pmlName, pplRows], idx) => {
+    return buildPmlCard(pmlName, pplRows, idx);
+  }).join('');
+
+  elResult.innerHTML = `
+    <div style="background:var(--ink);color:#fff;border-radius:4px 4px 0 0;padding:20px 24px;">
+      <div style="font-family:var(--mono);font-size:12px;color:#cfc6b4;letter-spacing:.06em;">${escapeHtml(kec)} · NIP ${escapeHtml(nip)}</div>
+      <p style="font-family:var(--serif);font-size:26px;font-weight:700;margin:6px 0 0;">${escapeHtml(tfNameNorm)}</p>
+      <div style="display:flex;gap:24px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.18);flex-wrap:wrap;">
+        <div class="stat"><span class="num" style="color:#fff;">${Object.keys(pmlGroups).length}</span><span class="lbl" style="color:#a8a194;">PML</span></div>
+        <div class="stat"><span class="num" style="color:#fff;">${teamRows.length}</span><span class="lbl" style="color:#a8a194;">Total PPL</span></div>
+        <div class="stat"><span class="num" style="color:#fff;">${fmt(totalTarget)}</span><span class="lbl" style="color:#a8a194;">Target</span></div>
+        <div class="stat"><span class="num" style="color:#fff;">${fmt(totalKirim)}</span><span class="lbl" style="color:#a8a194;">Dikirim</span></div>
+        <div class="stat"><span class="num" style="color:#fff;">${fmt(totalDraft)}</span><span class="lbl" style="color:#a8a194;">Draft</span></div>
+        <div class="stat"><span class="num" style="color:#fff;">${fmtPct(avgPersen)}</span><span class="lbl" style="color:#a8a194;">Progress</span></div>
+      </div>
+    </div>
+    <div style="background:var(--paper-raised);border:1.5px solid var(--rule);border-top:none;border-radius:0 0 4px 4px;overflow:hidden;">${pmlCardsHtml}</div>`;
+
+  attachPmlToggle();
+}
+
+function renderAllKecamatan(){
+  elFilterArea.style.display = 'block';
+
+  // Apply filters
+  let filteredData = DATA;
+  if (FILTER_STATE.kec) filteredData = filteredData.filter(r => r.kec === FILTER_STATE.kec);
+  if (FILTER_STATE.tf) filteredData = filteredData.filter(r => r.tf === FILTER_STATE.tf);
+  if (FILTER_STATE.pml) filteredData = filteredData.filter(r => r.pml === FILTER_STATE.pml);
+  if (FILTER_STATE.ppl) filteredData = filteredData.filter(r => r.ppl === FILTER_STATE.ppl);
+
+  if (filteredData.length === 0){
+    elResult.innerHTML = `<div class="not-found">Tidak ada data yang cocok dengan filter yang dipilih.</div>`;
+    return;
+  }
+
+  // Group by kecamatan
+  const kecGroups = {};
+  filteredData.forEach(r => {
+    const kec = r.kec || 'Tidak Diketahui';
+    if (!kecGroups[kec]) kecGroups[kec] = [];
+    kecGroups[kec].push(r);
+  });
+
+  const sortedKec = Object.keys(kecGroups).sort();
+
+  let totalAllTarget = 0, totalAllKirim = 0, totalAllDraft = 0;
+  let totalAllPML = 0, totalAllPPL = 0, totalAllTF = 0;
+
+  const kecSectionsHtml = sortedKec.map((kec, kecIdx) => {
+    const kecRows = kecGroups[kec];
+    const kecTarget = kecRows.reduce((s,r)=> s + (r.target||0), 0);
+    const kecKirim = kecRows.reduce((s,r)=> s + (r.kirim||0), 0);
+    const kecDraft = kecRows.reduce((s,r)=> s + (r.draft||0), 0);
+    const kecPersen = kecTarget > 0 ? (kecKirim/kecTarget*100) : 0;
+
+    const tfGroups = {};
+    kecRows.forEach(r => {
+      const tf = r.tf || 'Tidak Diketahui';
+      if (!tfGroups[tf]) tfGroups[tf] = [];
+      tfGroups[tf].push(r);
+    });
+
+    const tfItemsHtml = Object.entries(tfGroups).map(([tfName, tfRows], tfIdx) => {
+      const tfNip = TF_TO_NIP[tfName] || '-';
+      const tfTarget = tfRows.reduce((s,r)=> s + (r.target||0), 0);
+      const tfKirim = tfRows.reduce((s,r)=> s + (r.kirim||0), 0);
+      const tfDraft = tfRows.reduce((s,r)=> s + (r.draft||0), 0);
+      const tfPersen = tfTarget > 0 ? (tfKirim/tfTarget*100) : 0;
+
+      const pmlGroups = {};
+      tfRows.forEach(r => { (pmlGroups[r.pml] = pmlGroups[r.pml] || []).push(r); });
+      const pmlCount = Object.keys(pmlGroups).length;
+      const pplCount = tfRows.length;
+
+      const pmlCardsHtml = Object.entries(pmlGroups).map(([pmlName, pplRows], pmlIdx) => {
+        return buildPmlCard(pmlName, pplRows, pmlIdx);
+      }).join('');
+
+      return `
+        <div class="tf-item" data-kec="${kecIdx}" data-tf="${tfIdx}">
+          <div class="tf-header-row">
+            <div>
+              <p class="tf-name">${escapeHtml(tfName)}</p>
+              <p class="tf-nip">NIP: ${escapeHtml(tfNip)} · ${pmlCount} PML · ${pplCount} PPL</p>
+            </div>
+            <div class="tf-mini-stats">
+              <div class="mini-stat"><span class="num">${fmt(tfTarget)}</span><span class="lbl">Target</span></div>
+              <div class="mini-stat"><span class="num">${fmt(tfKirim)}</span><span class="lbl">Dikirim</span></div>
+              <div class="mini-stat"><span class="num">${fmt(tfDraft)}</span><span class="lbl">Draft</span></div>
+              <div class="mini-stat"><span class="num">${fmtPct(tfPersen)}</span><span class="lbl">Progress</span></div>
+            </div>
+            <div class="tf-chevron">▾</div>
+          </div>
+          <div class="tf-body">
+            <div class="tf-inner">
+              <div style="border:1.5px solid var(--rule);border-radius:4px;overflow:hidden;">${pmlCardsHtml}</div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    totalAllTarget += kecTarget;
+    totalAllKirim += kecKirim;
+    totalAllDraft += kecDraft;
+    totalAllTF += Object.keys(tfGroups).length;
+
+    const allPmlSet = new Set();
+    const allPplSet = new Set();
+    kecRows.forEach(r => { allPmlSet.add(r.pml); allPplSet.add(r.ppl); });
+    totalAllPML += allPmlSet.size;
+    totalAllPPL += allPplSet.size;
+
+    return `
+      <div class="dropdown-section" data-kec="${kecIdx}">
+        <div class="dropdown-header">
+          <div>
+            <p class="dropdown-title">${escapeHtml(kec)}</p>
+            <p class="dropdown-count">${Object.keys(tfGroups).length} Task Force · ${allPmlSet.size} PML · ${allPplSet.size} PPL</p>
+          </div>
+          <div style="display:flex;gap:20px;flex-shrink:0;align-items:center;flex-wrap:wrap;">
+            <div class="mini-stat" style="text-align:right;"><span class="num" style="font-size:16px;color:#fff;">${fmt(kecTarget)}</span><span class="lbl" style="color:#a8a194;">Target</span></div>
+            <div class="mini-stat" style="text-align:right;"><span class="num" style="font-size:16px;color:#fff;">${fmt(kecKirim)}</span><span class="lbl" style="color:#a8a194;">Dikirim</span></div>
+            <div class="mini-stat" style="text-align:right;"><span class="num" style="font-size:16px;color:#fff;">${fmtPct(kecPersen)}</span><span class="lbl" style="color:#a8a194;">Progress</span></div>
+            <div class="dropdown-chevron">▾</div>
+          </div>
+        </div>
+        <div class="dropdown-body">
+          <div class="dropdown-inner">
+            ${tfItemsHtml}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const totalPersen = totalAllTarget > 0 ? (totalAllKirim/totalAllTarget*100) : 0;
+
+  // Determine title based on filters
+  let filterLabel = 'Ringkasan Seluruh Kecamatan';
+  if (FILTER_STATE.kec || FILTER_STATE.tf || FILTER_STATE.pml || FILTER_STATE.ppl){
+    const parts = [];
+    if (FILTER_STATE.kec) parts.push(FILTER_STATE.kec);
+    if (FILTER_STATE.tf) parts.push(FILTER_STATE.tf);
+    if (FILTER_STATE.pml) parts.push(FILTER_STATE.pml);
+    if (FILTER_STATE.ppl) parts.push(FILTER_STATE.ppl);
+    filterLabel = 'Filter: ' + parts.join(' · ');
+  }
+
+  elResult.innerHTML = `
+    <div class="kec-overview">
+      <div class="kec-overview-header">
+        <p class="kec-overview-title">${escapeHtml(filterLabel)}</p>
+        <p class="kec-overview-sub">NIP Master · ${sortedKec.length} Kecamatan · ${filteredData.length} baris data</p>
+        <div class="kec-overview-stats">
+          <div class="stat"><span class="num" style="color:#fff;">${sortedKec.length}</span><span class="lbl" style="color:#a8a194;">Kecamatan</span></div>
+          <div class="stat"><span class="num" style="color:#fff;">${totalAllTF}</span><span class="lbl" style="color:#a8a194;">Task Force</span></div>
+          <div class="stat"><span class="num" style="color:#fff;">${totalAllPML}</span><span class="lbl" style="color:#a8a194;">PML</span></div>
+          <div class="stat"><span class="num" style="color:#fff;">${totalAllPPL}</span><span class="lbl" style="color:#a8a194;">PPL</span></div>
+          <div class="stat"><span class="num" style="color:#fff;">${fmt(totalAllTarget)}</span><span class="lbl" style="color:#a8a194;">Target</span></div>
+          <div class="stat"><span class="num" style="color:#fff;">${fmt(totalAllKirim)}</span><span class="lbl" style="color:#a8a194;">Dikirim</span></div>
+          <div class="stat"><span class="num" style="color:#fff;">${fmt(totalAllDraft)}</span><span class="lbl" style="color:#a8a194;">Draft</span></div>
+          <div class="stat"><span class="num" style="color:#fff;">${fmtPct(totalPersen)}</span><span class="lbl" style="color:#a8a194;">Progress</span></div>
+        </div>
+      </div>
+    </div>
+    ${kecSectionsHtml}`;
+
+  attachKecToggle();
+  attachTFToggle();
+  attachPmlToggle();
+}
+
+// ====== ATTACH TOGGLE HANDLERS ======
+function attachPmlToggle(){
+  document.querySelectorAll('.pml-card').forEach(card => {
+    const top = card.querySelector('.pml-card-top');
+    const detail = card.querySelector('.detail-wrap');
+    if (top && detail) {
+      top.addEventListener('click', () => {
+        const isOpen = card.classList.toggle('open');
+        detail.classList.toggle('open', isOpen);
+      });
+    }
+  });
+}
+
+function attachTFToggle(){
+  document.querySelectorAll('.tf-item').forEach(tf => {
+    const header = tf.querySelector('.tf-header-row');
+    const body = tf.querySelector('.tf-body');
+    if (header && body) {
+      header.addEventListener('click', () => {
+        const isOpen = tf.classList.toggle('open');
+        body.classList.toggle('open', isOpen);
+      });
+    }
+  });
+}
+
+function attachKecToggle(){
+  document.querySelectorAll('.dropdown-section').forEach(section => {
+    const header = section.querySelector('.dropdown-header');
+    const body = section.querySelector('.dropdown-body');
+    if (header && body) {
+      header.addEventListener('click', () => {
+        const isOpen = section.classList.toggle('open');
+        body.classList.toggle('open', isOpen);
+      });
+    }
+  });
+}
+
+// ====== SEARCH LOGIC ======
+function doSearch(){
+  const raw = elInput.value.trim();
+  if (!raw){ renderEmpty(); return; }
+
+  if (raw === MASTER_NIP){
+    // Reset filters to default
+    FILTER_STATE = { kec: '', tf: '', pml: '', ppl: '' };
+    elFilterKec.value = '';
+    elFilterTF.value = '';
+    elFilterPML.value = '';
+    elFilterPPL.value = '';
+    // Repopulate all filters
+    populateAllFilters();
+    renderAllKecamatan();
+    return;
+  }
+
+  const tfName = NIP_MAP[raw];
+  if (!tfName){ renderNotFound(raw); return; }
+  renderSingleTF(raw, tfName);
+}
+
+function saveNip(nip){
+  try{ if (nip){ localStorage.setItem(STORAGE_KEY, nip); } else { localStorage.removeItem(STORAGE_KEY); } }catch(e){}
+}
+
+elInput.addEventListener('input', () => { doSearch(); saveNip(elInput.value.trim()); });
+elClear.addEventListener('click', () => { elInput.value=''; elInput.focus(); renderEmpty(); saveNip(''); });
+elRefreshBtn.addEventListener('click', loadData);
+
+loadData();
+</script>
+</body>
+</html>
