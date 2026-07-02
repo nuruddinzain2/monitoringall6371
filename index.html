@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monitoring Pendataan SE2026 — Kab. Banjarmasin</title>
+<title>Monitoring Pendataan SE2026 — Kota Banjarmaisn</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz@8..60&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -30,9 +30,11 @@
   .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
 
   header.page{
-    border-bottom:3px double var(--ink);
-    padding-bottom:18px;
+    border:2px solid var(--ink);
+    background:var(--paper-raised);
+    padding:22px 24px 20px;
     margin-bottom:22px;
+    box-shadow:6px 6px 0 rgba(28,38,48,.10);
   }
   .eyebrow{
     font-family:var(--mono);
@@ -44,13 +46,29 @@
   }
   h1{
     font-family:var(--serif);
-    font-weight:700;
-    font-size:clamp(28px,4.5vw,42px);
-    line-height:1.08;
-    margin:0 0 8px;
-    letter-spacing:-.01em;
+    font-weight:800;
+    font-size:clamp(32px,5vw,50px);
+    line-height:1.02;
+    margin:0 0 10px;
+    letter-spacing:-.02em;
+    display:inline-block;
+    padding-bottom:6px;
+    border-bottom:4px solid var(--accent);
   }
   .sub{font-size:15px;color:var(--muted);margin:0;line-height:1.5;}
+  .top-update{
+    display:inline-block;
+    margin-top:14px;
+    padding:10px 14px;
+    font-family:var(--mono);
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:.02em;
+    color:var(--accent);
+    background:var(--accent-soft);
+    border:1px solid rgba(180,69,47,.35);
+    border-radius:3px;
+  }
 
   /* ---- status bar ---- */
   .status-bar{
@@ -423,45 +441,16 @@
     .tf-inner{padding:0 16px 14px;}
   }
 
-  /* ---- update timestamp badge ---- */
-  .update-badge{
-    display:inline-block;
-    font-family:var(--mono);
-    font-size:10px;
-    color:#7a5c3a;
-    background:#f5e6c8;
-    border:1px solid #d4c4a0;
-    border-radius:3px;
-    padding:1px 7px;
-    margin-left:8px;
-    vertical-align:middle;
-    white-space:nowrap;
-  }
-  .update-badge.tf-badge{
-    color:#cfc6b4;
-    background:rgba(255,255,255,.12);
-    border-color:rgba(255,255,255,.25);
-  }
-  .update-badge.pml-badge{
-    color:#5c4413;
-    background:#f3e8d2;
-    border-color:#d4c4a0;
-  }
-  .update-badge.ppl-badge{
-    color:#3a5c3a;
-    background:#e1ebe2;
-    border-color:#b8d4b8;
-  }
-
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header class="page">
-    <p class="eyebrow">Sensus Ekonomi 2026 · Kab/Kota 6371</p>
+    <p class="eyebrow">Sensus Ekonomi 2026 · Kota Banjarmaisn</p>
     <h1>Monitoring Progress Pendataan</h1>
     <p class="sub">Masukkan NIP Task Force untuk menampilkan seluruh PML dan PPL di bawahnya.</p>
+    <p class="top-update" id="topUpdate">Tanggal update: memuat…</p>
   </header>
 
   <div class="status-bar">
@@ -513,6 +502,7 @@
 <script>
 // ====== KONFIGURASI ======
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXpVwhWEVGDNmGefdCjapaDYWD_b7V_KOdhpdIE2ZB2SzAmxD4u2oplc5rSzOyTGLm-0F-9XBxm8ja/pub?gid=2111234947&single=true&output=csv";
+const UPDATE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXpVwhWEVGDNmGefdCjapaDYWD_b7V_KOdhpdIE2ZB2SzAmxD4u2oplc5rSzOyTGLm-0F-9XBxm8ja/pub?output=csv&sheet=Sheet2&range=A1";
 
 const NIP_MAP = {"340019495":"M.TAUFIK R","132311851":"IMA","340015186":"NURUDDIN ZAIN","340015557":"SYAKERANI","340050198":"PRATIWI","340055352":"NOORHAMIMAH","340056117":"FARIDA AMINA","340016618":"DWI SETYO MAYLENA","340056874":"RAISA NOOR MAULIDA","340018139":"JUNAIDI EFENDI","340018823":"M.IQBAL","340055342":"DANY THERESA","340057558":"RISKA FINA AYUNINDA","340058750":"GHITA","340060168":"KHALISTA","340061619":"ADIMA LULUATUN","340063514":"SALMA AFNA H. H","340066120":"ANNISA","340066397":"NASYWA","340012390":"AL AMIN","340065201":"IMRON","340052140":"IRWAN","340065025":"SAFWAN","340016619":"JULIANA ADMAKA","340019091":"LISDA FITRIAWATI","340062842":"HENDRA"};
 
@@ -532,6 +522,7 @@ const elHint = document.getElementById('hintText');
 const elStatusDot = document.getElementById('statusDot');
 const elStatusText = document.getElementById('statusText');
 const elRefreshBtn = document.getElementById('refreshBtn');
+const elTopUpdate = document.getElementById('topUpdate');
 const elFilterArea = document.getElementById('filterArea');
 const elFilterKec = document.getElementById('filterKec');
 const elFilterTF = document.getElementById('filterTF');
@@ -581,39 +572,36 @@ function parseCSV(text){
 
 function setStatus(state, text){
   elStatusDot.className = 'status-dot ' + state;
-  if (LAST_UPDATE_TIME && state === 'ok') {
-    const d = new Date(LAST_UPDATE_TIME);
-    elStatusText.textContent = text + " · diperbarui " + d.toLocaleString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
-  } else {
-    elStatusText.textContent = text;
-  }
+  elStatusText.textContent = text;
 }
 
+let LAST_UPDATE_LABEL = '';
 
-let LAST_UPDATE_TIME = null;
+function cleanCsvCell(text){
+  let value = String(text || '').trim();
+  if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1).replace(/""/g, '"');
+  return value;
+}
 
-function getUpdateBadge(type='default'){
-  if (!LAST_UPDATE_TIME) return '';
-  const date = new Date(LAST_UPDATE_TIME);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+function normalizeUpdateLabel(value){
+  const cleanValue = cleanCsvCell(value);
+  if (!cleanValue) return 'Tanggal update belum tersedia';
+  if (/^tanggal update/i.test(cleanValue)) return cleanValue;
+  return 'Tanggal update: ' + cleanValue;
+}
 
-  let timeText;
-  if (diffMins < 1) timeText = 'baru saja';
-  else if (diffMins < 60) timeText = diffMins + ' menit lalu';
-  else if (diffHours < 24) timeText = diffHours + ' jam lalu';
-  else timeText = diffDays + ' hari lalu';
-
-  const fullDate = date.toLocaleString('id-ID', {
-    day:'2-digit', month:'short', year:'numeric',
-    hour:'2-digit', minute:'2-digit'
-  });
-
-  const typeClass = type === 'tf' ? 'tf-badge' : type === 'pml' ? 'pml-badge' : type === 'ppl' ? 'ppl-badge' : '';
-  return `<span class="update-badge ${typeClass}" title="Diperbarui: ${fullDate}">diperbarui ${timeText}</span>`;
+async function loadUpdateInfo(){
+  try{
+    const res = await fetch(UPDATE_URL + '&_=' + Date.now(), {cache:'no-store'});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    LAST_UPDATE_LABEL = normalizeUpdateLabel(text.split(/\r?\n/)[0] || '');
+    elTopUpdate.textContent = LAST_UPDATE_LABEL;
+  }catch(err){
+    LAST_UPDATE_LABEL = 'Tanggal update belum tersedia';
+    elTopUpdate.textContent = LAST_UPDATE_LABEL;
+    console.error('❌ Gagal memuat tanggal update:', err);
+  }
 }
 
 async function loadData(){
@@ -651,7 +639,6 @@ async function loadData(){
     if (rows.length === 0) throw new Error('Data kosong setelah parsing — format CSV mungkin berubah');
 
     DATA = rows;
-    LAST_UPDATE_TIME = Date.now();
     setStatus('ok', 'Data termuat · ' + rows.length.toLocaleString('id-ID') + ' baris PPL');
     elInput.disabled = false;
     elHint.innerHTML = 'Total <b>' + Object.keys(NIP_MAP).length.toLocaleString('id-ID') + '</b> Task Force terdaftar dengan NIP.';
@@ -808,7 +795,7 @@ function buildPmlCard(pmlName, pplRows, idx) {
     const pctClass = pct < 2 ? 'low' : '';
     return `
       <tr>
-        <td>${escapeHtml(r.ppl)} ${getUpdateBadge('ppl')}</td>
+        <td>${escapeHtml(r.ppl)}</td>
         <td class="num">${fmt(r.target)}</td>
         <td class="num">${fmt(r.kirim)}</td>
         <td class="num">${fmt(r.draft)}</td>
@@ -826,7 +813,7 @@ function buildPmlCard(pmlName, pplRows, idx) {
     <div class="pml-card" data-idx="${idx}">
       <div class="pml-card-top">
         <div class="pml-name-block">
-          <p class="pml-name">${escapeHtml(pmlName)} ${getUpdateBadge('pml')}</p>
+          <p class="pml-name">${escapeHtml(pmlName)}</p>
           <div class="pml-meta">
             <span><b>${pplRows.length}</b> PPL</span>
             <span>Progress: <b>${fmtPct(pmlPersen)}</b></span>
@@ -881,7 +868,7 @@ function renderSingleTF(nip, tfName){
   elResult.innerHTML = `
     <div style="background:var(--ink);color:#fff;border-radius:4px 4px 0 0;padding:20px 24px;">
       <div style="font-family:var(--mono);font-size:12px;color:#cfc6b4;letter-spacing:.06em;">${escapeHtml(kec)} · NIP ${escapeHtml(nip)}</div>
-      <p style="font-family:var(--serif);font-size:26px;font-weight:700;margin:6px 0 0;">${escapeHtml(tfNameNorm)} ${getUpdateBadge('tf')}</p>
+      <p style="font-family:var(--serif);font-size:26px;font-weight:700;margin:6px 0 0;">${escapeHtml(tfNameNorm)}</p>
       <div style="display:flex;gap:24px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.18);flex-wrap:wrap;">
         <div class="stat"><span class="num" style="color:#fff;">${Object.keys(pmlGroups).length}</span><span class="lbl" style="color:#a8a194;">PML</span></div>
         <div class="stat"><span class="num" style="color:#fff;">${teamRows.length}</span><span class="lbl" style="color:#a8a194;">Total PPL</span></div>
@@ -958,7 +945,7 @@ function renderAllKecamatan(){
         <div class="tf-item" data-kec="${kecIdx}" data-tf="${tfIdx}">
           <div class="tf-header-row">
             <div>
-              <p class="tf-name">${escapeHtml(tfName)} ${getUpdateBadge('tf')}</p>
+              <p class="tf-name">${escapeHtml(tfName)}</p>
               <p class="tf-nip">NIP: ${escapeHtml(tfNip)} · ${pmlCount} PML · ${pplCount} PPL</p>
             </div>
             <div class="tf-mini-stats">
@@ -1121,9 +1108,11 @@ function saveNip(nip){
 
 elInput.addEventListener('input', () => { doSearch(); saveNip(elInput.value.trim()); });
 elClear.addEventListener('click', () => { elInput.value=''; elInput.focus(); renderEmpty(); saveNip(''); });
-elRefreshBtn.addEventListener('click', loadData);
+elRefreshBtn.addEventListener('click', () => {
+  loadUpdateInfo().finally(() => loadData());
+});
 
-loadData();
+loadUpdateInfo().finally(() => loadData());
 </script>
 </body>
 </html>
